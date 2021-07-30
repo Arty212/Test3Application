@@ -1,89 +1,54 @@
 package com.example.test3application
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-const val NOTIFICATION_CHANNEL_ID = "com.example.test3application"
-const val NOTIFICATION_ID = 100
-
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        Log.d("remoteMessage", "remoteMessage")
         super.onMessageReceived(remoteMessage)
 
-        Log.e("message", "Message Received ...")
 
-        if (remoteMessage.data.isNotEmpty()) {
-            val title = remoteMessage.data["title"]
-            val body = remoteMessage.data["body"]
-            showNotification(applicationContext, title, body)
-        } else {
-            val title = remoteMessage.notification!!.title
-            val body = remoteMessage.notification!!.body
-            showNotification(applicationContext, title, body)
-        }
-    }
+        val notificationManager =
+            (applicationContext.getSystemService(Context.NOTIFICATION_SERVICE))
+                    as NotificationManager
 
-
-    fun showNotification(
-        context: Context,
-        title: String?,
-        message: String?
-    ) {
-        val ii =
-            Intent(context, MainActivity::class.java).also {
-                it.data = Uri.parse("custom://" + System.currentTimeMillis())
-                it.action = "actionstring" + System.currentTimeMillis()
-                it.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-        val pi =
-            PendingIntent.getActivity(context, 0, ii, PendingIntent.FLAG_UPDATE_CURRENT)
-        val notification: Notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setAutoCancel(true)
-                .setContentText(message)
-                .setContentIntent(pi)
-                .setContentTitle(title)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            val notification = NotificationCompat.Builder(applicationContext)
+                .setSmallIcon(R.drawable.monster)
+                .setContentTitle(remoteMessage.notification!!.title)
+                .setContentText(remoteMessage.notification!!.body)
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                 .build()
-            val notificationManager = context.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, notification)
+        } else {
+            val notification =
+                NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
+                    .setSmallIcon(R.drawable.monster)
+                    .setContentTitle(remoteMessage.notification!!.title)
+                    .setContentText(remoteMessage.notification!!.body)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                    .build()
+
             val notificationChannel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                title,
+                NOTIFICATION_CHANNEL_ID,
                 NotificationManager.IMPORTANCE_DEFAULT
             )
+
             notificationManager.createNotificationChannel(notificationChannel)
             notificationManager.notify(NOTIFICATION_ID, notification)
-        } else {
-            notification = NotificationCompat.Builder(context)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setAutoCancel(true)
-                .setContentText(message)
-                .setContentIntent(pi)
-                .setContentTitle(title)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .build()
-            val notificationManager = context.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-            notificationManager.notify(NOTIFICATION_ID, notification)
+
         }
     }
-
 }

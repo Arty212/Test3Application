@@ -1,88 +1,66 @@
 package com.example.test3application
 
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.media.RingtoneManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 
+
+const val NOTIFICATION_ID = 2
+const val NOTIFICATION_CHANNEL_ID = "com.example.test3application"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        showNotification(applicationContext, "123", "123")
-    }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.channel_name)
-            val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
+        /* val array = arrayOfNulls<Int>(10000000)
+         array.forEach { println(it) }*/
+
+        /*val thread = Thread {
+                Thread.sleep(10000)
             }
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
+            thread.name = "MyThread"
+            thread.start()*/
 
-    fun showNotification(
-        context: Context,
-        title: String?,
-        message: String?
-    ) {
-        val ii = Intent(context, MainActivity::class.java).also {
-            it.data = Uri.parse("custom://" + System.currentTimeMillis())
-            it.action = "actionstring" + System.currentTimeMillis()
-            it.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val pi =
-            PendingIntent.getActivity(context, 0, ii, PendingIntent.FLAG_UPDATE_CURRENT)
-        val notification: Notification
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setContentIntent(pi)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .setWhen(System.currentTimeMillis())
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setContentTitle(title).build()
-            val notificationManager = context.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-            val notificationChannel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                title,
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            notificationManager.createNotificationChannel(notificationChannel)
-            notificationManager.notify(NOTIFICATION_ID, notification)
-        } else {
-            notification = NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setAutoCancel(true)
-                .setContentText(message)
-                .setContentIntent(pi)
-                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                .setContentTitle(title).build()
-            val notificationManager = context.getSystemService(
-                Context.NOTIFICATION_SERVICE
-            ) as NotificationManager
-            notificationManager.notify(NOTIFICATION_ID, notification)
+        /* for (i in 1..10) {
+             thread(name = "MyThread_$i", start = true) {
+                 Log.d("MyThread", Thread.currentThread().name)
+                 Thread.sleep(10000)
+             }
+         }
+         Log.d("MyThread", Thread.currentThread().name)*/
+
+        /*var account = Account(100)
+        for (i in 1..10) {
+            thread(name = "MyThread_$i", start = true) {
+                account.withdrawal(Random.nextLong(10, 100))
+                account.deposit(Random.nextLong(10, 20))
+            }
+        }*/
+
+        /* var account = Account(100)
+         for (i in 1..10) {
+             account.withdrawal(Random.nextLong(10, 100))
+             account.deposit(Random.nextLong(10, 20)) { balance ->
+                 Log.d("MyThread", "balance:$balance")
+             }
+         }*/
+
+
+        var account = Account(100)
+
+        for (i in 1..10) {
+            CoroutineScope(Dispatchers.IO).launch {
+                account.withdrawal(Random.nextLong(10, 100)).also {
+                    Log.d("MyThread", "balance:$it")
+                }
+                account.deposit(Random.nextLong(10, 20))
+            }
         }
     }
 }
